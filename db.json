@@ -1,0 +1,414 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "traveler",
+      "email": "traveler1@example.com",
+      "password": "pass123",
+      "isAdmin": false
+    },
+    {
+      "id": "6d83",
+      "username": "AK",
+      "email": "ak04_02@outlook.com",
+      "password": "pass123",
+      "phone": "7359166905",
+      "isAdmin": false
+    },
+    {
+      "id": "e0ec",
+      "username": "t1",
+      "email": "ak04@outlook.com",
+      "password": "123456",
+      "isAdmin": false
+    },
+    {
+      "id": "4141",
+      "username": "admin",
+      "email": "admin@example.com",
+      "password": "123456",
+      "isAdmin": true
+    }
+  ],
+  "packages": [
+    {
+      "id": "1",
+      "title": "Romantic Paris Getaway",
+      "description": "Experience the magic of Paris with a luxurious 5-day escape, featuring iconic landmarks, gourmet dining, and enchanting river cruises. Perfect for couples seeking an unforgettable romantic adventure.",
+      "itinerary": [
+        "Day 1: Arrival in Paris, transfer to hotel. Evening Seine River cruise with dinner.",
+        "Day 2: Morning visit to the Louvre Museum. Afternoon at Eiffel Tower with summit access.",
+        "Day 3: Full-day excursion to the magnificent Palace of Versailles and its gardens.",
+        "Day 4: Explore the artistic Montmartre district, visit Sacré-Cœur Basilica, and enjoy local cafes.",
+        "Day 5: Leisurely breakfast, last-minute shopping, and departure."
+      ],
+      "image": "https://tse3.mm.bing.net/th/id/OIP.h8_khAzOayGbgKBRsPVZZAHaEo?r=0&rs=1&pid=ImgDetMain",
+      "price": 2000,
+      "originalPrice": 2200,
+      "duration": "5 days",
+      "category": "Romantic",
+      "startDate": "2025-09-10",
+      "endDate": "2025-09-14",
+      "departureLocation": "Any Major City",
+      "destinationLocation": "Paris, France"
+    },
+    {
+      "id": "2",
+      "title": "Tokyo City Explorer",
+      "description": "Embark on a thrilling 7-day journey through Tokyo's vibrant culture, ancient traditions, and futuristic cityscape. Discover bustling markets, serene temples, and world-class cuisine.",
+      "itinerary": [
+        "Day 1: Arrive in Tokyo, check into hotel. Explore Shinjuku and enjoy dinner with city views.",
+        "Day 2: Morning visit to Tsukiji Outer Market. Afternoon in Asakusa, Senso-ji Temple, and Nakamise-dori.",
+        "Day 3: Immerse in pop culture at Akihabara. Experience the fashion and unique vibes of Harajuku and Shibuya Crossing.",
+        "Day 4: Day trip to Mount Fuji and Lake Kawaguchiko, with stunning scenic views.",
+        "Day 5: Explore the Imperial Palace East Garden, Ginza shopping, and a traditional tea ceremony.",
+        "Day 6: Free day for personal exploration, museum visits, or an optional day trip to Hakone.",
+        "Day 7: Enjoy last moments in Tokyo, then transfer to the airport for departure."
+      ],
+      "image": "https://tse4.mm.bing.net/th/id/OIP.SKhTNcykEmU7ehqjdV3FGwHaFj?r=0&rs=1&pid=ImgDetMain",
+      "price": 3000,
+      "originalPrice": null,
+      "duration": "7 days",
+      "category": "Cultural",
+      "startDate": "2025-10-05",
+      "endDate": "2025-10-11",
+      "departureLocation": "Any Major City",
+      "destinationLocation": "Tokyo, Japan"
+    },
+    {
+      "id": "3",
+      "title": "Kenya Wildlife Safari",
+      "description": "A thrilling 10-day safari adventure through Kenya's most renowned national parks, offering unparalleled wildlife viewing opportunities with expert guides. Witness the 'Big Five' in their natural habitat.",
+      "itinerary": [
+        "Day 1: Arrival in Nairobi, transfer to hotel. Briefing on the safari ahead.",
+        "Day 2: Journey to Maasai Mara National Reserve, afternoon game drive.",
+        "Day 3-4: Full days of game drives in Maasai Mara, exploring the vast plains.",
+        "Day 5: Drive to Lake Nakuru National Park, known for its flamingos and rhinos.",
+        "Day 6: Head to Amboseli National Park, with stunning views of Mount Kilimanjaro and large elephant herds.",
+        "Day 7-8: Game drives in Amboseli, focusing on wildlife photography and bird watching.",
+        "Day 9: Return to Nairobi, evening at leisure or cultural dinner.",
+        "Day 10: Departure from Nairobi."
+      ],
+      "image": "https://tse1.mm.bing.net/th/id/OIP.3nzH7zY5fB6Dw5nRLoblsQHaEU?r=0&rs=1&pid=ImgDetMain",
+      "price": 4500,
+      "originalPrice": 4800,
+      "duration": "10 days",
+      "category": "Adventure",
+      "startDate": "2025-11-15",
+      "endDate": "2025-11-24",
+      "departureLocation": "Nairobi, Kenya (Arrival)",
+      "destinationLocation": "Maasai Mara, Amboseli, Lake Nakuru"
+    },
+    {
+      "id": "4",
+      "title": "Historical Rome Discovery",
+      "description": "Uncover the ancient wonders of Rome on a captivating 4-day tour. Walk through history, from the Colosseum to the Vatican, and savor authentic Italian cuisine.",
+      "itinerary": [
+        "Day 1: Arrival in Rome, transfer to hotel. Evening walk to Trevi Fountain and Pantheon.",
+        "Day 2: Morning tour of the Colosseum and Roman Forum. Afternoon exploring Palatine Hill.",
+        "Day 3: Vatican City visit: St. Peter's Basilica, Vatican Museums, and Sistine Chapel.",
+        "Day 4: Optional catacombs tour or free time for shopping, then departure."
+      ],
+      "image": "https://cdn.britannica.com/75/75775-131-1D05DD74/Colosseum-Rome.jpg",
+      "price": 1200,
+      "originalPrice": null,
+      "duration": "4 days",
+      "category": "Historical",
+      "startDate": "2025-08-01",
+      "endDate": "2025-08-04",
+      "departureLocation": "Any Major City",
+      "destinationLocation": "Rome, Italy"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "03b3",
+      "userId": "6d83",
+      "packageId": "2",
+      "date": "2025-06-13",
+      "travelers": 1,
+      "status": "pending",
+      "transportType": "train",
+      "route": "Mumbai to Delhi",
+      "amount": 2500,
+      "specialRequests": ""
+    },
+    {
+      "id": "db14",
+      "packageId": "1",
+      "userId": "6d83",
+      "date": "2025-06-13",
+      "travelers": 2,
+      "amount": 4000,
+      "status": "cancelled"
+    },
+    {
+      "id": "9ede",
+      "userId": "6d83",
+      "packageId": "2",
+      "date": "2025-06-13",
+      "travelers": 1,
+      "status": "confirmed",
+      "transportType": "train",
+      "route": "Mumbai to Delhi",
+      "amount": 2500,
+      "specialRequests": ""
+    },
+    {
+      "id": "d70c",
+      "userId": "6d83",
+      "packageId": "1",
+      "date": "2025-06-13",
+      "travelers": 1,
+      "status": "pending",
+      "transportType": "plane",
+      "route": "Mumbai to Delhi",
+      "amount": 8500,
+      "specialRequests": ""
+    },
+    {
+      "id": "51c2",
+      "packageId": "1",
+      "userId": "6d83",
+      "date": "2025-06-20",
+      "travelers": 1,
+      "amount": 2000,
+      "status": "pending"
+    },
+    {
+      "id": "a9d7",
+      "packageId": "4",
+      "userId": "6d83",
+      "date": "2025-08-12",
+      "travelers": 1,
+      "amount": 1200,
+      "status": "pending",
+      "packageTitle": "Historical Rome Discovery"
+    },
+    {
+      "id": "0b07",
+      "userId": "6d83",
+      "packageId": 2,
+      "date": "2025-06-19",
+      "travelers": 3,
+      "status": "pending",
+      "transportType": "train",
+      "route": "Mumbai to Delhi",
+      "amount": 7500,
+      "specialRequests": ""
+    },
+    {
+      "id": "9af7",
+      "packageId": "2",
+      "userId": "6d83",
+      "date": "2025-10-06",
+      "travelers": 1,
+      "amount": 3000,
+      "status": "pending",
+      "packageTitle": "Tokyo City Explorer"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "1",
+      "userId": "1",
+      "tripId": null,
+      "date": "2025-06-10",
+      "category": "transport",
+      "amount": 120.5,
+      "description": "Taxi from airport",
+      "receiptUrl": ""
+    },
+    {
+      "id": "9b5a",
+      "userId": "e0ec",
+      "date": "2025-06-14",
+      "category": "transport",
+      "amount": 8500,
+      "description": "PLANE - Mumbai to Delhi",
+      "receiptUrl": ""
+    },
+    {
+      "id": "704e",
+      "userId": "e0ec",
+      "date": "2025-06-14",
+      "category": "food",
+      "amount": 600,
+      "description": "t2",
+      "receiptUrl": ""
+    },
+    {
+      "id": "dd95",
+      "category": "restraunt",
+      "date": "2025-06-16",
+      "amount": 5000,
+      "description": "food at darshan",
+      "userId": "6d83"
+    },
+    {
+      "id": "3736",
+      "userId": "6d83",
+      "date": "2025-06-18",
+      "category": "transport",
+      "amount": 8500,
+      "description": "PLANE - Mumbai to Delhi",
+      "receiptUrl": ""
+    }
+  ],
+  "trips": [
+    {
+      "id": "1",
+      "userId": "1",
+      "name": "Summer Vacation",
+      "departure": "Mumbai",
+      "destination": "Delhi",
+      "transport": "plane",
+      "date": "2025-07-16",
+      "passengers": 2,
+      "status": "planned",
+      "createdAt": "2025-06-12T10:00:00Z",
+      "description": "A relaxing summer trip with family.",
+      "image": null,
+      "price": 15000
+    },
+    {
+      "id": "410c",
+      "name": "Trip to Romantic Paris Getaway",
+      "userId": "6d83",
+      "status": "planning",
+      "packageId": "1",
+      "departure": "Any Major City",
+      "destination": "Paris, France",
+      "date": "2025-09-10",
+      "price": 2000,
+      "createdAt": "2025-06-15T05:54:33.107Z",
+      "image": "https://images.unsplash.com/photo-1543321586-224424976a26?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "description": "An automatically generated trip from the 'Romantic Paris Getaway' package."
+    },
+    {
+      "id": "688e",
+      "name": "Trip: Romantic Paris Getaway",
+      "userId": "6d83",
+      "status": "planning",
+      "packageId": "1",
+      "departure": "Any Major City",
+      "destination": "Paris, France",
+      "date": "2025-09-10",
+      "price": 2000,
+      "createdAt": "2025-06-15T05:57:00.533Z",
+      "image": "https://images.unsplash.com/photo-1543321586-224424976a26?q=80&w=2940&auto=format&fitlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "description": "Another automatically generated trip from the 'Romantic Paris Getaway' package."
+    },
+    {
+      "id": "78a9b0c1",
+      "name": "Weekend Goa Escape",
+      "userId": "6d83",
+      "status": "booked",
+      "departure": "Mumbai",
+      "destination": "Goa",
+      "transport": "plane",
+      "date": "2025-07-20",
+      "passengers": 2,
+      "price": 8000,
+      "createdAt": "2025-06-01T12:00:00Z",
+      "image": "https://images.unsplash.com/photo-1596706059296-6e42b8e3a240?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "description": "A quick and refreshing trip to the beaches of Goa.",
+      "packageId": null
+    },
+    {
+      "id": "d733",
+      "name": "Custom Trip Example",
+      "userId": "6d83",
+      "status": "planning",
+      "departure": "Ahmedabad",
+      "destination": "Shimla",
+      "date": "2025-08-10",
+      "price": 12000,
+      "createdAt": "2025-06-15T09:00:00Z",
+      "description": "A personalized trip to the beautiful hills of Shimla.",
+      "image": "https://images.unsplash.com/photo-1597813264619-3f0f7a55c276?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "packageId": null
+    },
+    {
+      "id": "5368",
+      "name": "t5",
+      "userId": "6d83",
+      "status": "planning",
+      "createdAt": "2025-06-15T09:10:01.101Z"
+    },
+    {
+      "id": "6f3c",
+      "name": "Trip to Kenya Wildlife Safari",
+      "userId": "6d83",
+      "status": "planning",
+      "packageId": "3",
+      "departure": "",
+      "destination": "",
+      "date": "2025-11-15",
+      "price": 4500,
+      "createdAt": "2025-06-15T09:11:29.511Z"
+    },
+    {
+      "id": "ee45",
+      "name": "Trip: Historical Rome Discovery",
+      "userId": "6d83",
+      "status": "planning",
+      "packageId": "4",
+      "departure": "",
+      "destination": "",
+      "date": "2025-08-01",
+      "price": 1200,
+      "createdAt": "2025-06-15T09:11:40.688Z"
+    },
+    {
+      "id": "91b7",
+      "name": "ty",
+      "userId": "6d83",
+      "status": "planning",
+      "createdAt": "2025-06-15T09:57:21.272Z"
+    },
+    {
+      "id": "0fae",
+      "name": "Trip: ffffffffffffffffffffffffffff",
+      "userId": "4141",
+      "status": "planning",
+      "packageId": null,
+      "departure": "",
+      "destination": "",
+      "date": "2025-06-19",
+      "price": 4.4444444444444444e+23,
+      "createdAt": "2025-06-16T09:01:03.407Z"
+    },
+    {
+      "id": "5218",
+      "name": "Trip: Historical Rome Discovery",
+      "userId": "6d83",
+      "status": "planning",
+      "packageId": "4",
+      "departure": "",
+      "destination": "",
+      "date": "2025-08-01",
+      "price": 1200,
+      "createdAt": "2025-06-16T09:03:43.211Z"
+    },
+    {
+      "id": "008e",
+      "name": "r1",
+      "userId": "6d83",
+      "status": "planning",
+      "createdAt": "2025-06-17T05:47:11.117Z"
+    },
+    {
+      "id": "ea82",
+      "name": "Trip: Romantic Paris Getaway",
+      "userId": "6d83",
+      "status": "planning",
+      "packageId": "1",
+      "departure": "",
+      "destination": "",
+      "date": "2025-09-10",
+      "price": 2000,
+      "createdAt": "2025-06-17T05:47:55.832Z"
+    }
+  ]
+}
