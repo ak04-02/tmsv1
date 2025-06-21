@@ -5,6 +5,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   useTheme as useMuiTheme 
 } from "@mui/material";
+import { motion } from "framer-motion";
 import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
@@ -18,9 +19,10 @@ import { Line, Bar } from "react-chartjs-2";
 import { Chart as ChartJS, LineElement, PointElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css'; 
-import { fetchUserBookings, fetchPackages, fetchUserExpenses } from "../api/api";
+import { fetchUserBookings, fetchPackages, fetchUserExpenses, fetchUserTrips } from "../api/api"; 
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme as useMyCustomTheme } from '../contexts/Themecontext';
+import { Link } from "react-router-dom";
 ChartJS.register(LineElement, PointElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -28,6 +30,7 @@ export default function Dashboard() {
   // const { currentMode, toggleTheme } = useMyCustomTheme();
   const [bookings, setBookings] = useState([]);
   const [expenses, setExpenses] = useState([]);
+    const [trips, setTrips] = useState([]);
   const [packagesMap, setPackagesMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,17 +43,20 @@ export default function Dashboard() {
     Promise.all([
       fetchUserBookings(user.id),
       fetchPackages(),
-      fetchUserExpenses(user.id) 
+      fetchUserExpenses(user.id) ,
+      fetchUserTrips(user.id)
     ])
-      .then(([userBookings, allPackages, userExpenses]) => {
+      .then(([userBookings, allPackages, userExpenses,userTrips]) => {
         setBookings(userBookings);
         setExpenses(userExpenses); 
+        setTrips(userTrips);
         const map = {};
         allPackages.forEach((pkg) => {
           map[pkg.id] = {
             id: pkg.id,
             title: pkg.title,
             price: pkg.price || 0, 
+            imageUrl: pkg.image || `https://source.unsplash.com/random/300x200?travel,${pkg.title}`
           };
         });
         setPackagesMap(map);
@@ -62,6 +68,16 @@ export default function Dashboard() {
         setLoading(false);
       });
   }, [isAuthenticated, user]);
+  const fadeSlide = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+  const getMyTrips = () => {
+    return trips.filter(trip => trip.userId === user.id) 
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 3); 
+};
+const myRecentTrips = getMyTrips(); 
   const totalBookings = bookings.length;
   const pendingBookings = bookings.filter((b) => b.status === "pending").length;
   const confirmedBookings = bookings.filter((b) => b.status === "confirmed").length;
@@ -81,17 +97,20 @@ export default function Dashboard() {
   };
   const currentMonthExpense = getTotalMonthlyExpense();
   const getUpcomingBookings = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); 
+    const selectedDate = new Date(date); 
+    selectedDate.setHours(0, 0, 0, 0); 
+    // const nextDay = new Date(selectedDate);
+    // nextDay.setDate(selectedDate.getDate() + 1);
+
     return bookings
       .filter(b => {
         const bookingDate = new Date(b.date);
         bookingDate.setHours(0, 0, 0, 0);
-        return bookingDate >= today;
+        return bookingDate >= selectedDate &&  b.status !== "cancelled"; 
       })
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(0, 3); 
+      .sort((a, b) => new Date(a.date) - new Date(b.date)); 
   };
+  
   const upcomingBookings = getUpcomingBookings();
   const getMonthlyExpensesForChart = () => {
     const monthlyData = {};
@@ -129,7 +148,9 @@ export default function Dashboard() {
   };
   const getMonthlyBookingExpensesForChart = () => {
     const monthlyData = {};
-    bookings.forEach(booking => {
+    bookings
+      .filter(b => b.status !== "cancelled") 
+      .forEach(booking => {
       const bookingDate = new Date(booking.date);
       const monthYear = `${bookingDate.getFullYear()}-${bookingDate.getMonth()}`;
       monthlyData[monthYear] = (monthlyData[monthYear] || 0) + (booking.amount || 0);
@@ -238,6 +259,12 @@ export default function Dashboard() {
       padding: '10px',
       color: muiTheme.palette.text.primary,
     },
+    '@media (max-width: 900px)': {
+    '& .react-calendar': {
+      height: '80%',
+      fontSize:'13px'
+    },
+  },
     '& .react-calendar--doubleView': {
       width: '700px', 
     },
@@ -342,6 +369,7 @@ export default function Dashboard() {
       backgroundColor: muiTheme.palette.action.hover,
     },
   };
+
   if (loading) {
     return (
       <Container
@@ -427,7 +455,7 @@ export default function Dashboard() {
           </Grid>
         ))}
         <Grid item xs={12} md={5}>
-          <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, boxShadow: 3,width:'80vh', height: '44vh', display: 'flex', flexDirection: 'column' }}>
+          <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, boxShadow: 3,width:{xs:'50vh',sm:'90vh',md:'90vh'}, height: '44vh', display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>Monthly Booking Expenses</Typography>
             <Box sx={{ flexGrow: 1, minHeight: 0, '& canvas': { width: '100% !important', height: '95% !important' } }}>
               <Line data={bookingExpenseChartData} options={chartOptions} />
@@ -435,7 +463,7 @@ export default function Dashboard() {
           </Paper>
         </Grid>
            <Grid item xs={12} md={5}>
-           <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 3, boxShadow: 3, width:'40vh', height: '94%', display: 'flex', flexDirection: 'column', alignItems: 'center',
+           <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 3, boxShadow: 3, width:'40vh', height: {xs:'90%',md:'94%'}, display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 0 }}>Calendar</Typography>
              <Box sx={{
@@ -470,51 +498,65 @@ export default function Dashboard() {
           <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, boxShadow: 3, height: "100%", display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>Upcoming Bookings</Typography>
             <Box sx={{ maxHeight: 300, overflowY: "auto", pr: 1 }}>
-              {upcomingBookings.length > 0 ? (
-                upcomingBookings.map(trip => (
-                  <Paper
-                    key={trip.id}
-                    sx={{
-                      p: 2,
-                      mb: 2,
-                      borderRadius: 2,
-                      borderLeft: `5px solid ${trip.status === 'pending' ? muiTheme.palette.warning.main : muiTheme.palette.success.main}`,
-                      display: 'flex',
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      justifyContent: 'space-between',
-                      alignItems: { xs: 'flex-start', sm: 'center' },
-                      boxShadow: 1,
-                      '&:last-child': { mb: 0 },
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'text.primary' }}>{trip.route || packagesMap[trip.packageId]?.title || 'Unknown Trip'}</Typography>
-                      <Typography variant="body2" color="text.secondary">Date: {trip.date}</Typography>
-                      {trip.travelers && <Typography variant="body2" color="text.secondary">Travelers: {trip.travelers}</Typography>}
-                    </Box>
-                    <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, mt: { xs: 1, sm: 0 } }}>
-                      <Typography variant="body1" fontWeight="bold" color="primary.main">₹{trip.amount?.toLocaleString('en-IN') || 'N/A'}</Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          bgcolor: trip.status === 'pending' ? 'warning.light' : 'success.light',
-                          color: trip.status === 'pending' ? 'warning.dark' : 'success.dark',
-                          px: 1, py: 0.5, borderRadius: 1, textTransform: 'capitalize', fontWeight: 'bold',
-                        }}
-                      >
-                        {trip.status}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                ))
-              ) : (
-                <Typography variant="body2" color="text.secondary">No upcoming bookings found.</Typography>
-              )}
+              
+
+{upcomingBookings.length > 0 ? (
+  upcomingBookings.map(trip => ( 
+    <Paper
+      key={trip.id}
+      sx={{
+        p: 2,
+        mb: 2,
+        width:{sm:'80vh',md:'35vh'},
+        borderRadius: 2,
+        borderLeft: `5px solid ${trip.status === 'pending' ? muiTheme.palette.warning.main : muiTheme.palette.success.main}`,
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        boxShadow: 1,
+        '&:last-child': { mb: 0 },
+      }}
+    >
+      <Box>
+        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'text.primary' }}>{trip.route || packagesMap[trip.packageId]?.title || 'Unknown Trip'}</Typography>
+        <Typography variant="body2" color="text.secondary">Date: {trip.date}</Typography>
+        {trip.travelers && <Typography variant="body2" color="text.secondary">Travelers: {trip.travelers}</Typography>}
+      </Box>
+      <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, mt: { xs: 1, sm: 0 } }}>
+        <Typography variant="body1" fontWeight="bold" color="primary.main">₹{trip.amount?.toLocaleString('en-IN') || 'N/A'}</Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            bgcolor: trip.status === 'pending' ? 'warning.light' : 'success.light',
+            color: trip.status === 'pending' ? 'warning.dark' : 'success.dark',
+            px: 1, py: 0.5, borderRadius: 1, textTransform: 'capitalize', fontWeight: 'bold',
+          }}
+        >
+          {trip.status}
+        </Typography>
+        {trip.packageId && ( 
+          <Button
+            component={Link}
+            to={`/packages/${trip.packageId}`} 
+            variant="contained"
+            size="small"
+            sx={{ mt: 1, ml: { sm: 1 }, borderRadius: 8 }}
+          >
+            View Details
+          </Button>
+        )}
+      </Box>
+    </Paper>
+  ))
+) : (
+  <Typography variant="body2" color="text.secondary">No upcoming bookings found.</Typography>
+)}
             </Box>
           </Paper>
         </Grid>
         <Grid item xs={12}>
-          <Paper sx={{ p: { xs: 2, md: 3 },flexDirection:"row", borderRadius: 3, boxShadow: 3,width:'70vh', height: '30vh',overflowX: "auto"}}>
+          <Paper sx={{ p: { xs: 2, md: 3 },flexDirection:"row", borderRadius: 3, boxShadow: 3,width:{xs:'50vh', md:'105vh'}, flex:1,height: {xs:'60vh',md:'50vh'},overflowX: "auto",overflowY: "auto"}}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>Recommended Packages</Typography>
             <Grid container spacing={3} sx={{overflowX: "auto"}}>
               {Object.values(packagesMap).length > 0 ? (
@@ -526,6 +568,14 @@ export default function Dashboard() {
                       overflowX: "auto",overflowY: "auto",
                       '&:hover': { transform: 'translateY(-3px)', boxShadow: 3 },
                     }}>
+                      <Box sx={{ mb: 1, borderRadius: 1, overflow: 'hidden' }}>
+  <img
+    src={pkg.imageUrl}
+    alt={pkg.title}
+    style={{ width: '100%', height: '140px', objectFit: 'cover' }}
+  />
+</Box>
+
                       <Box>
                         <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'text.primary', mb: 1 }}>{pkg.title}</Typography>
                         <Typography color="success.main" variant="h6" sx={{ mt: 1 }}>₹{pkg.price?.toLocaleString('en-IN') || 'N/A'}</Typography>
@@ -552,46 +602,138 @@ export default function Dashboard() {
             </Grid>
           </Paper>
         </Grid>
+<Grid item xs={12}>
+  <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, boxShadow: 3, height: "100%", display: 'flex', flexDirection: 'column' }}>
+    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>My Trips</Typography>
+    <Box sx={{ maxHeight: 300, overflowY: "auto", pr: 1 }}>
+      {myRecentTrips.length > 0 ? ( 
+        myRecentTrips.map(trip => ( 
+          <Paper
+            key={trip.id}
+            sx={{
+              p: 2,
+              mb: 2,
+              borderRadius: 2,
+              borderLeft: `5px solid ${muiTheme.palette.info.main}`, 
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              boxShadow: 1,
+              '&:last-child': { mb: 0 },
+            }}
+          >
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'text.primary' }}>{trip.name || 'Untitled Trip'}</Typography> 
+              <Typography variant="body2" color="text.secondary">Date: {trip.date}</Typography>
+              {trip.destination && <Typography variant="body2" color="text.secondary">Destination: {trip.destination}</Typography>}
+            </Box>
+            <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, mt: { xs: 1, sm: 0 } }}>
+              <Typography variant="body1" fontWeight="bold" color="primary.main">₹{trip.price?.toLocaleString('en-IN') || 'N/A'}</Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  bgcolor: muiTheme.palette.info.light,
+                  color: muiTheme.palette.info.dark,
+                  px: 1, py: 0.5, borderRadius: 1, textTransform: 'capitalize', fontWeight: 'bold',
+                }}
+              >
+                {trip.status}
+              </Typography>
+              {/* <Button
+                component={Link} 
+                to={`/plan/${trip.id}`} 
+                variant="contained"
+                size="small"
+                sx={{ mt: 1, ml: { sm: 1 }, borderRadius: 8 }}
+              >
+                Show Details
+              </Button> */}
+            </Box>
+          </Paper>
+        ))
+      ) : (
+        <Typography variant="body2" color="text.secondary">No custom trips found. Start planning a new trip!</Typography>
+      )}
+    </Box>
+  </Paper>
+</Grid>
+
         <Grid item xs={12}>
-          <TableContainer component={Paper} sx={{ mt: 0, borderRadius: 3, boxShadow: 3 ,overflowX: "auto",overflowY: "auto",height:"30vh"}}>
-            <Table>
-              <TableHead sx={{ bgcolor: muiTheme.palette.primary.light }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Title</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Date</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Amount</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {bookings.length > 0 ? (
-                  bookings.map((trip) => (
-                    <TableRow key={trip.id} sx={{ '&:nth-of-type(odd)': { bgcolor: muiTheme.palette.action.hover } }}>
-                      <TableCell>{trip.route || packagesMap[trip.packageId]?.title || 'Unknown Trip'}</TableCell>
-                      <TableCell>{trip.date}</TableCell>
-                      <TableCell>₹{trip.amount?.toLocaleString('en-IN') || 'N/A'}</TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            bgcolor: trip.status === 'pending' ? 'warning.light' : 'success.light',
-                            color: trip.status === 'pending' ? 'warning.dark' : 'success.dark',
-                            px: 1, py: 0.5, borderRadius: 1, textTransform: 'capitalize', fontWeight: 'bold',
-                          }}
-                        >
-                          {trip.status}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} align="center">No bookings to display.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <Paper sx={{ p: 2, borderRadius: 3, boxShadow: 3,width:{xs:'50vh',sm:'90vh',md:'70vh',lg:'70rem'}, flex:1,height: '50vh' }}>
+  <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: 'text.primary' }}>
+    All Bookings
+  </Typography>
+
+<TableContainer sx={{ overflowX: "auto", overflowY: "auto", maxHeight: "40vh" }}>
+  <Table>
+    <TableHead sx={{ bgcolor: muiTheme.palette.primary.light }}>
+      <TableRow>
+        <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Title</TableCell>
+        <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Date</TableCell>
+        <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Amount</TableCell>
+        <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Status</TableCell>
+        <TableCell sx={{ fontWeight: 'bold', color: muiTheme.palette.primary.contrastText }}>Actions</TableCell> 
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {bookings.length > 0 ? (
+        bookings.map((trip) => ( 
+          <TableRow
+            key={trip.id}
+            sx={{
+              '&:nth-of-type(odd)': { bgcolor: muiTheme.palette.action.hover },
+              '&:hover': { bgcolor: muiTheme.palette.action.selected }
+            }}
+          >
+            <TableCell>{trip.route || packagesMap[trip.packageId]?.title || 'Unknown Trip'}</TableCell>
+            <TableCell>{trip.date}</TableCell>
+            <TableCell>₹{trip.amount?.toLocaleString('en-IN') || 'N/A'}</TableCell>
+            <TableCell>
+              <Typography
+                variant="caption"
+                sx={{
+                  bgcolor: trip.status === 'pending'
+                    ? muiTheme.palette.warning.light
+                    : trip.status === 'cancelled'
+                    ? muiTheme.palette.error.light
+                    : muiTheme.palette.success.light,
+                  color: trip.status === 'pending'
+                    ? muiTheme.palette.warning.dark
+                    : trip.status === 'cancelled'
+                    ? muiTheme.palette.error.dark
+                    : muiTheme.palette.success.dark,
+                  px: 1, py: 0.5, borderRadius: 1, textTransform: 'capitalize', fontWeight: 'bold',
+                }}
+              >
+                {trip.status}
+              </Typography>
+            </TableCell>
+            <TableCell> 
+              {trip.packageId && ( 
+                <Button
+                  component={Link}
+                  to={`/packages/${trip.packageId}`} 
+                  variant="outlined"
+                  size="small"
+                  sx={{ borderRadius: 8 }}
+                >
+                  View Details
+                </Button>
+              )}
+            </TableCell>
+          </TableRow>
+        ))
+      ) : (
+        <TableRow>
+          <TableCell colSpan={5} align="center">No bookings to display.</TableCell> {/* Updated colspan */}
+        </TableRow>
+      )}
+    </TableBody>
+  </Table>
+</TableContainer>
+          </Paper>
+
         </Grid>
       </Grid>
     </Box>

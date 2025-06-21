@@ -13,7 +13,7 @@
       "email": "ak04_02@outlook.com",
       "password": "pass123",
       "phone": "7359166905",
-      "isAdmin": false
+      "isAdmin": true
     },
     {
       "id": "e0ec",
@@ -125,6 +125,7 @@
       "id": "03b3",
       "userId": "6d83",
       "packageId": "2",
+      "tripId": "trip_id_example",
       "date": "2025-06-13",
       "travelers": 1,
       "status": "pending",
@@ -136,6 +137,7 @@
     {
       "id": "db14",
       "packageId": "1",
+      "tripId": "trip_id_example",
       "userId": "6d83",
       "date": "2025-06-13",
       "travelers": 2,
@@ -145,6 +147,7 @@
     {
       "id": "9ede",
       "userId": "6d83",
+      "tripId": "trip_id_example",
       "packageId": "2",
       "date": "2025-06-13",
       "travelers": 1,
@@ -158,9 +161,10 @@
       "id": "d70c",
       "userId": "6d83",
       "packageId": "1",
+      "tripId": "trip_id_example",
       "date": "2025-06-13",
       "travelers": 1,
-      "status": "pending",
+      "status": "completed",
       "transportType": "plane",
       "route": "Mumbai to Delhi",
       "amount": 8500,
@@ -169,6 +173,7 @@
     {
       "id": "51c2",
       "packageId": "1",
+      "tripId": "trip_id_example",
       "userId": "6d83",
       "date": "2025-06-20",
       "travelers": 1,
@@ -178,6 +183,7 @@
     {
       "id": "a9d7",
       "packageId": "4",
+      "tripId": "trip_id_example",
       "userId": "6d83",
       "date": "2025-08-12",
       "travelers": 1,
@@ -189,6 +195,7 @@
       "id": "0b07",
       "userId": "6d83",
       "packageId": 2,
+      "tripId": "trip_id_example",
       "date": "2025-06-19",
       "travelers": 3,
       "status": "pending",
@@ -200,12 +207,81 @@
     {
       "id": "9af7",
       "packageId": "2",
+      "tripId": "trip_id_example",
       "userId": "6d83",
       "date": "2025-10-06",
       "travelers": 1,
       "amount": 3000,
+      "status": "cancelled",
+      "packageTitle": "Tokyo City Explorer",
+      "cancellationReason": "",
+      "cancellationDate": "2025-06-20T03:37:02.745Z"
+    },
+    {
+      "id": "e202",
+      "userId": "6d83",
+      "packageId": 2,
+      "tripId": "trip_id_example",
+      "date": "2025-06-21",
+      "travelers": 1,
       "status": "pending",
-      "packageTitle": "Tokyo City Explorer"
+      "transportType": "train",
+      "route": "Mumbai to Delhi",
+      "amount": 2500,
+      "specialRequests": ""
+    },
+    {
+      "id": "27e0",
+      "userId": "6d83",
+      "packageId": 2,
+      "tripId": "trip_id_example",
+      "date": "2025-06-21",
+      "travelers": 1,
+      "status": "pending",
+      "transportType": "train",
+      "route": "Mumbai to Delhi",
+      "amount": 2500,
+      "specialRequests": ""
+    },
+    {
+      "id": "b7ad",
+      "userId": "4141",
+      "tripId": "900d",
+      "packageId": null,
+      "route": "anand to mumbai (Bus)",
+      "transportType": "bus",
+      "date": "2025-06-21",
+      "amount": 5000,
+      "travelers": 1,
+      "specialRequests": "",
+      "status": "cancelled",
+      "createdAt": "2025-06-20T04:28:05.284Z",
+      "cancellationReason": "",
+      "cancellationDate": "2025-06-20T04:28:13.787Z"
+    },
+    {
+      "id": "d8bf",
+      "packageId": "3",
+      "userId": "6d83",
+      "date": "2025-11-13",
+      "travelers": 1,
+      "amount": 4500,
+      "status": "pending",
+      "packageTitle": "Kenya Wildlife Safari"
+    },
+    {
+      "id": "31a3",
+      "userId": "6d83",
+      "tripId": "3c8a",
+      "packageId": null,
+      "route": "anand via a to mumbai (Bus)",
+      "transportType": "bus",
+      "date": "2025-06-20",
+      "amount": 5000,
+      "travelers": 1,
+      "specialRequests": "",
+      "status": "pending",
+      "createdAt": "2025-06-20T06:06:40.508Z"
     }
   ],
   "expenses": [
@@ -253,6 +329,16 @@
       "amount": 8500,
       "description": "PLANE - Mumbai to Delhi",
       "receiptUrl": ""
+    },
+    {
+      "id": "82a4",
+      "description": "last",
+      "amount": 777,
+      "date": "2025-06-20",
+      "category": "",
+      "userId": "4141",
+      "tripId": "0257",
+      "createdAt": "2025-06-20T04:57:25.011Z"
     }
   ],
   "trips": [
@@ -330,13 +416,6 @@
       "packageId": null
     },
     {
-      "id": "5368",
-      "name": "t5",
-      "userId": "6d83",
-      "status": "planning",
-      "createdAt": "2025-06-15T09:10:01.101Z"
-    },
-    {
       "id": "6f3c",
       "name": "Trip to Kenya Wildlife Safari",
       "userId": "6d83",
@@ -361,25 +440,6 @@
       "createdAt": "2025-06-15T09:11:40.688Z"
     },
     {
-      "id": "91b7",
-      "name": "ty",
-      "userId": "6d83",
-      "status": "planning",
-      "createdAt": "2025-06-15T09:57:21.272Z"
-    },
-    {
-      "id": "0fae",
-      "name": "Trip: ffffffffffffffffffffffffffff",
-      "userId": "4141",
-      "status": "planning",
-      "packageId": null,
-      "departure": "",
-      "destination": "",
-      "date": "2025-06-19",
-      "price": 4.4444444444444444e+23,
-      "createdAt": "2025-06-16T09:01:03.407Z"
-    },
-    {
       "id": "5218",
       "name": "Trip: Historical Rome Discovery",
       "userId": "6d83",
@@ -392,13 +452,6 @@
       "createdAt": "2025-06-16T09:03:43.211Z"
     },
     {
-      "id": "008e",
-      "name": "r1",
-      "userId": "6d83",
-      "status": "planning",
-      "createdAt": "2025-06-17T05:47:11.117Z"
-    },
-    {
       "id": "ea82",
       "name": "Trip: Romantic Paris Getaway",
       "userId": "6d83",
@@ -409,6 +462,311 @@
       "date": "2025-09-10",
       "price": 2000,
       "createdAt": "2025-06-17T05:47:55.832Z"
+    },
+    {
+      "id": "1cd4",
+      "name": "t1",
+      "userId": "6d83",
+      "status": "planned",
+      "createdAt": "2025-06-20T02:44:13.996Z",
+      "departure": "a",
+      "destination": "b",
+      "intermediateStops": [
+        {
+          "location": "c",
+          "arrivalDate": "2025-06-27",
+          "departureDate": "2025-06-25"
+        },
+        {
+          "location": "d",
+          "arrivalDate": "2025-06-21",
+          "departureDate": "2025-06-21"
+        }
+      ],
+      "transport": "bus",
+      "date": "2025-06-21",
+      "passengers": 1
+    },
+    {
+      "id": "71c8",
+      "name": "t4",
+      "userId": "6d83",
+      "status": "planning",
+      "createdAt": "2025-06-20T02:55:42.706Z",
+      "departure": "",
+      "destination": "",
+      "intermediateStops": []
+    },
+    {
+      "id": "6b52",
+      "name": "ui",
+      "userId": "4141",
+      "status": "planning",
+      "createdAt": "2025-06-20T03:57:05.104Z"
+    },
+    {
+      "id": "873e",
+      "name": "tu",
+      "userId": "4141",
+      "status": "planning",
+      "createdAt": "2025-06-20T04:00:21.269Z"
+    },
+    {
+      "id": "4feb",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "train",
+      "date": "2025-06-21",
+      "price": 0,
+      "notes": "",
+      "budget": 697,
+      "createdAt": "2025-06-20T04:21:13.112Z",
+      "packageId": null
+    },
+    {
+      "id": "900d",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-21",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:27:29.263Z",
+      "packageId": null
+    },
+    {
+      "id": "f568",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:29:00.403Z",
+      "packageId": null
+    },
+    {
+      "id": "703f",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:34:21.721Z",
+      "packageId": null
+    },
+    {
+      "id": "68bf",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:36:22.129Z",
+      "packageId": null
+    },
+    {
+      "id": "d1f7",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:38:23.542Z",
+      "packageId": null
+    },
+    {
+      "id": "db0d",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:40:05.502Z",
+      "packageId": null
+    },
+    {
+      "id": "1ac6",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:42:32.271Z",
+      "packageId": null
+    },
+    {
+      "id": "cd25",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:49:32.105Z",
+      "packageId": null
+    },
+    {
+      "id": "26bc",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:49:57.124Z",
+      "packageId": null
+    },
+    {
+      "id": "0257",
+      "name": "ty",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T04:57:06.356Z",
+      "packageId": null
+    },
+    {
+      "id": "56d1",
+      "name": "5t",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T05:00:42.138Z",
+      "packageId": null
+    },
+    {
+      "id": "ab23",
+      "name": "ty",
+      "userId": "6d83",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T06:05:24.391Z",
+      "packageId": null
+    },
+    {
+      "id": "3c8a",
+      "name": "ty",
+      "userId": "6d83",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "intermediateStops": [
+        "a"
+      ],
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T06:06:14.526Z",
+      "packageId": null
+    },
+    {
+      "id": "5a7e",
+      "name": "tu",
+      "userId": "4141",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "intermediateStops": [],
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T16:44:35.447Z",
+      "packageId": null
+    },
+    {
+      "id": "779c",
+      "name": "Trip to Historical Rome Discovery",
+      "userId": "4141",
+      "status": "planning",
+      "packageId": "4",
+      "departure": "",
+      "destination": "",
+      "date": "2025-08-01",
+      "price": 1200,
+      "createdAt": "2025-06-20T16:49:47.523Z"
+    },
+    {
+      "id": "3a20",
+      "name": "ti",
+      "userId": "6d83",
+      "status": "planning",
+      "departure": "anand",
+      "destination": "mumbai",
+      "intermediateStops": [],
+      "transport": "bus",
+      "date": "2025-06-20",
+      "price": 0,
+      "notes": "",
+      "budget": 700,
+      "createdAt": "2025-06-20T16:54:56.041Z",
+      "packageId": null
     }
   ]
 }

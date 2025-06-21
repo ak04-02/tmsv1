@@ -25,7 +25,7 @@ export default function Hero() {
         alignItems: { xs: "center", md: "flex-start" },
         minHeight: "70vh",
         padding: { xs: "2rem 1rem", md: "0 2rem" },
-        backgroundColor: (theme) => theme.palette.background.default,
+        backgroundColor: 'rgb(17, 43, 81)',
         color: (theme) => theme.palette.text.primary,
         textAlign: { xs: "center", md: "left" },
       }}
@@ -35,6 +35,7 @@ export default function Hero() {
         sx={{
           fontSize: { xs: "2.5rem", md: "3.5rem" },
           color: (theme) => theme.palette.primary.main,
+          fontWeight:'bolder',
           mb: 2,
         }}
       >
@@ -42,7 +43,7 @@ export default function Hero() {
       </Typography>
       <Typography
         variant="h5"
-        sx={{ maxWidth: "600px", mb: 3 }}
+        sx={{ maxWidth: "600px", mb: 3,color:'white' }}
       >
         Manage your trips, bookings, and itineraries effortlessly with our
         all-in-one travel management system.

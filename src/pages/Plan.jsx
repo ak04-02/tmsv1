@@ -17,13 +17,18 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  useTheme as useMuiTheme
 } from '@mui/material';
-import { ChevronDown, ChevronUp, Plus, Search, Plane, Train, Bus, MapPin, Calendar, DollarSign, Trash2, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../contexts/Themecontext';
-import { createTrip, createExpense, fetchUserExpenses, deleteExpense as apiDeleteExpense } from '../api/api';
+import { ChevronDown, ChevronUp, Plus, Search, Plane, Train, Bus, MapPin, Calendar, DollarSign, Trash2, Sun, Moon, ChevronRight, X } from 'lucide-react'; // Added X icon for removing stops
+import { useTheme as useMyCustomTheme } from '../contexts/Themecontext';
+import { createTrip, updateTrip, createExpense, fetchUserExpenses, deleteExpense as apiDeleteExpense } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
 import { createBooking } from '../api/api';
+
 const getTransportIcon = (transport) => {
   switch (transport) {
     case 'plane': return <Plane size={20} />;
@@ -32,760 +37,760 @@ const getTransportIcon = (transport) => {
     default: return <Bus size={20} />;
   }
 };
+
 const PlanTripContent = () => {
-  const { theme: currentThemeMode, toggleTheme } = useTheme();
+  const muiTheme = useMuiTheme();
+  const { theme: currentThemeMode, toggleTheme } = useMyCustomTheme();
+
   const [tripName, setTripName] = useState('');
   const [showTripForm, setShowTripForm] = useState(false);
   const [tripForm, setTripForm] = useState({
     departure: '',
     destination: '',
+    intermediateStops: [], // Added for intermediate stops
     transport: 'bus',
     date: '',
-    passengers: 1
+    price: '',
+    notes: '',
+    budget: ''
   });
-  const [searchResults, setSearchResults] = useState([]);
-  const [sidePanelOpen, setSidePanelOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('expense-form');
-  const [tabStates, setTabStates] = useState({
-    'expense-form': false,
-    'expense-list': false
-  });
-  const [expenses, setExpenses] = useState([]);
-  const [newExpense, setNewExpense] = useState({
-    title: '',
-    amount: '',
-    category: 'transport',
-    date: ''
-  });
+  const [currentTrip, setCurrentTrip] = useState(null);
+  const [tripLoading, setTripLoading] = useState(false);
+  const [tripError, setTripError] = useState(null);
   const { user } = useAuth();
+  const [expenses, setExpenses] = useState([]);
+  const [expenseForm, setExpenseForm] = useState({
+    description: '',
+    amount: '',
+    date: new Date().toISOString().split('T')[0],
+    category: ''
+  });
+  const [expenseLoading, setExpenseLoading] = useState(false);
+  const [expenseError, setExpenseError] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedResult, setSelectedResult] = useState(null);
   const [bookingForm, setBookingForm] = useState({
     travelers: 1,
-    date: '',
     specialRequests: ''
   });
-  const [formLoading, setFormLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingError, setBookingError] = useState(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
   const [alertInfo, setAlertInfo] = useState(null);
+  const [newIntermediateStop, setNewIntermediateStop] = useState(''); // State for new intermediate stop input
+
   useEffect(() => {
-    const loadExpenses = async () => {
-      if (!user?.id) return;
-      try {
-        setFormLoading(true);
-        const userExpenses = await fetchUserExpenses(user.id);
-        const formattedExpenses = userExpenses.map(expense => ({
-          ...expense,
-          title: expense.description,
-          amount: parseFloat(expense.amount) 
-        }));
-        setExpenses(formattedExpenses);
-      } catch (error) {
-        console.error('Failed to load expenses:', error);
-        setAlertInfo({ type: 'error', message: 'Failed to load expenses.' });
-      } finally {
-        setFormLoading(false);
-      }
-    };
-    loadExpenses();
-  }, [user?.id]);
-  if (!user) {
-    return (
-      <Box sx={{
-        minHeight: '80vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'text.primary'
-      }}>
-        <Typography variant="h6">Please log in to access trip planning.</Typography>
-      </Box>
-    );
-  }
-  const dummyResults = [
-    {
-      id: 1,
-      departure: 'Mumbai',
-      destination: 'Delhi',
-      transport: 'plane',
-      price: 8500,
-      duration: '2h 30m',
-      company: 'Air India',
-      rating: 4.2
-    },
-    {
-      id: 2,
-      departure: 'Mumbai',
-      destination: 'Delhi',
-      transport: 'train',
-      price: 2500,
-      duration: '16h 45m',
-      company: 'Rajdhani Express',
-      rating: 4.0
-    },
-    {
-      id: 3,
-      departure: 'Mumbai',
-      destination: 'Delhi',
-      transport: 'bus',
-      price: 1200,
-      duration: '18h 30m',
-      company: 'RedBus Premium',
-      rating: 3.8
+    if (user && currentTrip) {
+      setExpenseError(null);
+      setExpenseLoading(true);
+      fetchUserExpenses(user.id, currentTrip.id)
+        .then(setExpenses)
+        .catch(err => {
+          console.error("Failed to fetch expenses:", err);
+          setExpenseError("Failed to load expenses.");
+        })
+        .finally(() => setExpenseLoading(false));
+    } else {
+      setExpenses([]);
     }
-  ];
-  const toggleSidePanel = () => setSidePanelOpen(!sidePanelOpen);
-  const handleAddNewTrip = async () => {
-    if (!tripName.trim()) {
-      setAlertInfo({ type: 'error', message: 'Trip name cannot be empty.' });
-      return;
+  }, [user, currentTrip]);
+
+  useEffect(() => {
+    if (currentTrip) {
+      setTripForm({
+        departure: currentTrip.departure || '',
+        destination: currentTrip.destination || '',
+        intermediateStops: currentTrip.intermediateStops || [], // Populate intermediate stops from current trip
+        transport: currentTrip.transport || 'bus',
+        date: currentTrip.date || '',
+        price: currentTrip.price ? String(currentTrip.price) : '',
+        notes: currentTrip.notes || '',
+        budget: currentTrip.budget ? String(currentTrip.budget) : ''
+      });
+    } else {
+      setTripForm({
+        departure: '',
+        destination: '',
+        intermediateStops: [], // Reset intermediate stops for new trip
+        transport: 'bus',
+        date: '',
+        price: '',
+        notes: '',
+        budget: ''
+      });
     }
-    try {
-      setFormLoading(true);
-      const tripData = {
-        name: tripName,
-        userId: user?.id,
-        status: "planning",
-        createdAt: new Date().toISOString()
-      };
-      const newTrip = await createTrip(tripData);
-      console.log('Trip created:', newTrip);
-      setShowTripForm(true);
-      setAlertInfo({ type: 'success', message: `Trip "${tripName}" created successfully!` });
-    } catch (error) {
-      console.error('Failed to create trip:', error);
-      setAlertInfo({ type: 'error', message: 'Failed to create trip. Please try again.' });
-    } finally {
-      setFormLoading(false);
+  }, [currentTrip]);
+
+  const handleTripFormChange = (e) => {
+    setTripForm({ ...tripForm, [e.target.name]: e.target.value });
+  };
+
+  const handleAddIntermediateStop = () => { // Handler for adding intermediate stops
+    if (newIntermediateStop.trim() !== '') {
+      setTripForm(prev => ({
+        ...prev,
+        intermediateStops: [...prev.intermediateStops, newIntermediateStop.trim()]
+      }));
+      setNewIntermediateStop('');
     }
   };
-  const handleSearch = () => {
-    if (!tripForm.departure || !tripForm.destination) {
-      setAlertInfo({ type: 'error', message: 'Please enter both departure and destination.' });
-      return;
-    }
-    setSearchResults(dummyResults);
-    setAlertInfo({ type: 'success', message: 'Search completed!' });
-  };
-  const toggleTab = (tabName) => {
-    setTabStates(prev => ({
-      ...Object.fromEntries(Object.keys(prev).map(key => [key, false])),
-      [tabName]: !prev[tabName]
+
+  const handleRemoveIntermediateStop = (indexToRemove) => { // Handler for removing intermediate stops
+    setTripForm(prev => ({
+      ...prev,
+      intermediateStops: prev.intermediateStops.filter((_, index) => index !== indexToRemove)
     }));
-    setActiveTab(tabName);
   };
-  const addExpense = async () => {
-    if (!newExpense.title || !newExpense.amount || !newExpense.category) {
-      setAlertInfo({ type: 'error', message: 'Please fill all expense fields.' });
+
+  const handleCreateNewTrip = async () => {
+    if (!user) {
+      setTripError("Please log in to create a trip.");
       return;
     }
-    if (isNaN(parseFloat(newExpense.amount)) || parseFloat(newExpense.amount) <= 0) {
-      setAlertInfo({ type: 'error', message: 'Amount must be a positive number.' });
+    setTripLoading(true);
+    setTripError(null);
+    try {
+      const newTrip = {
+        name: tripName || `Trip to ${tripForm.destination || 'Unknown'}`,
+        userId: user.id,
+        status: 'planning',
+        ...tripForm,
+        price: parseFloat(tripForm.price) || 0,
+        budget: parseFloat(tripForm.budget) || 0,
+        createdAt: new Date().toISOString(),
+        packageId: null,
+      };
+      const createdTrip = await createTrip(newTrip);
+      setCurrentTrip(createdTrip);
+      setTripName('');
+      setShowTripForm(false);
+      setAlertInfo({ type: 'success', message: `Trip to ${createdTrip.destination} created!` });
+    } catch (err) {
+      console.error("Failed to create trip:", err);
+      setTripError("Failed to create trip. Please try again.");
+    } finally {
+      setTripLoading(false);
+    }
+  };
+
+  const handleSearchTransport = async () => {
+    if (!tripForm.departure || !tripForm.destination || !tripForm.date || !tripForm.transport) {
+      setSearchError("Please fill in Departure, Destination, Date, and Transport Type to search.");
+      setSearchResults([]);
       return;
     }
+
+    setSearchLoading(true);
+    setSearchError(null);
+    setSearchResults([]);
     try {
-      setFormLoading(true);
-      const expenseData = {
-        userId: user?.id,
-        date: newExpense.date || new Date().toISOString().split('T')[0],
-        category: newExpense.category,
-        amount: parseFloat(newExpense.amount),
-        description: newExpense.title,
-        receiptUrl: ""
-      };
-      const createdExpense = await createExpense(expenseData);
-      setExpenses(prev => [...prev, { ...createdExpense, title: newExpense.title }]);
-      setNewExpense({ title: '', amount: '', category: 'transport', date: '' });
-      setAlertInfo({ type: 'success', message: 'Expense added successfully!' });
-    } catch (error) {
-      console.error('Failed to add expense:', error);
-      setAlertInfo({ type: 'error', message: 'Failed to add expense. Please try again.' });
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Mock results adjusted to include intermediate stops for demonstration
+      const mockResults = [
+        { id: 't1', route: `${tripForm.departure} ${tripForm.intermediateStops.length > 0 ? `via ${tripForm.intermediateStops.join(', ')} ` : ''}to ${tripForm.destination} (Plane)`, price: 25000, transportType: 'plane' },
+        { id: 't2', route: `${tripForm.departure} ${tripForm.intermediateStops.length > 0 ? `via ${tripForm.intermediateStops.join(', ')} ` : ''}to ${tripForm.destination} (Train)`, price: 12000, transportType: 'train' },
+        { id: 't3', route: `${tripForm.departure} ${tripForm.intermediateStops.length > 0 ? `via ${tripForm.intermediateStops.join(', ')} ` : ''}to ${tripForm.destination} (Bus)`, price: 5000, transportType: 'bus' },
+      ];
+      setSearchResults(mockResults.filter(r => r.transportType === tripForm.transport));
+    } catch (err) {
+      setSearchError("Failed to search transport. Please try again.");
     } finally {
-      setFormLoading(false);
+      setSearchLoading(false);
     }
   };
-  const deleteExpense = async (id) => {
-    try {
-      await apiDeleteExpense(id);
-      setExpenses(prev => prev.filter(exp => exp.id !== id));
-      setAlertInfo({ type: 'success', message: 'Expense deleted successfully!' });
-    } catch (error) {
-      console.error('Failed to delete expense:', error);
-      setAlertInfo({ type: 'error', message: 'Failed to delete expense. Please try again.' });
-    }
-  };
-  const addToExpenseTracker = async (result) => {
-    try {
-      setFormLoading(true);
-      const expenseData = {
-        userId: user?.id,
-        date: tripForm.date || new Date().toISOString().split('T')[0],
-        category: 'transport',
-        amount: result.price,
-        description: `${result.transport.toUpperCase()} - ${result.departure} to ${result.destination}`,
-        receiptUrl: ""
-      };
-      const createdExpense = await createExpense(expenseData);
-      const expense = {
-        ...createdExpense,
-        title: `${result.transport.toUpperCase()} - ${result.departure} to ${result.destination}`
-      };
-      setExpenses(prev => [...prev, expense]);
-      setAlertInfo({ type: 'success', message: 'Added to expense tracker!' });
-    } catch (error) {
-      console.error('Failed to add expense:', error);
-      setAlertInfo({ type: 'error', message: 'Failed to add to expense tracker. Please try again.' });
-    } finally {
-      setFormLoading(false);
-    }
-  };
-  const handleBookNow = (result) => {
+
+  const handleBookTransport = (result) => {
     setSelectedResult(result);
-    setBookingForm({
-      travelers: tripForm.passengers || 1,
-      date: tripForm.date || '',
-      specialRequests: ''
-    });
+    setBookingForm(prev => ({ ...prev, travelers: 1 }));
     setShowBookingModal(true);
   };
+
   const handleBookingSubmit = async () => {
-    if (!bookingForm.date) {
-      setAlertInfo({ type: 'error', message: 'Please select a travel date.' });
+    if (!user || !selectedResult || !currentTrip) {
+      setBookingError("Missing user, selected transport, or current trip info.");
       return;
     }
-    if (bookingForm.travelers <= 0) {
-      setAlertInfo({ type: 'error', message: 'Number of travelers must be at least 1.' });
-      return;
-    }
+    setBookingLoading(true);
+    setBookingError(null);
+
     try {
-      setBookingLoading(true);
-      const bookingData = {
-        userId: user?.id,
-        packageId: selectedResult.id,
-        date: bookingForm.date,
-        travelers: bookingForm.travelers,
-        status: 'pending',
-        transportType: selectedResult.transport,
-        route: `${selectedResult.departure} to ${selectedResult.destination}`,
+      const newBooking = {
+        userId: user.id,
+        tripId: currentTrip.id,
+        packageId: null,
+        route: selectedResult.route, // This would ideally be a more structured object for multi-leg journeys
+        transportType: selectedResult.transportType,
+        date: tripForm.date,
         amount: selectedResult.price * bookingForm.travelers,
-        specialRequests: bookingForm.specialRequests || ''
+        travelers: bookingForm.travelers,
+        specialRequests: bookingForm.specialRequests,
+        status: 'pending',
+        createdAt: new Date().toISOString()
       };
-      const booking = await createBooking(bookingData);
-      console.log('Booking created:', booking);
+      await createBooking(newBooking);
+      setAlertInfo({ type: 'success', message: 'Transport booked successfully!' });
       setShowBookingModal(false);
-      setAlertInfo({ type: 'success', message: 'Booking submitted successfully!' });
-    } catch (error) {
-      console.error('Failed to create booking:', error);
-      setAlertInfo({ type: 'error', message: 'Failed to create booking. Please try again.' });
+      setSelectedResult(null);
+    } catch (err) {
+      console.error("Failed to create booking:", err);
+      setBookingError("Failed to create booking. Please try again.");
     } finally {
       setBookingLoading(false);
     }
   };
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+  const handleExpenseFormChange = (e) => {
+    setExpenseForm({ ...expenseForm, [e.target.name]: e.target.value });
+  };
+
+  const handleAddExpense = async () => {
+    if (!user || !currentTrip) {
+      setExpenseError("Please create or select a trip first.");
+      return;
+    }
+    if (!expenseForm.description || !expenseForm.amount || isNaN(parseFloat(expenseForm.amount))) {
+      setExpenseError("Please provide a valid description and amount for the expense.");
+      return;
+    }
+
+    setExpenseLoading(true);
+    setExpenseError(null);
+    try {
+      const newExpense = {
+        ...expenseForm,
+        amount: parseFloat(expenseForm.amount),
+        userId: user.id,
+        tripId: currentTrip.id,
+        createdAt: new Date().toISOString(),
+      };
+      const createdExpense = await createExpense(newExpense);
+      setExpenses((prev) => [...prev, createdExpense]);
+      setExpenseForm({ description: '', amount: '', date: new Date().toISOString().split('T')[0], category: '' });
+      setAlertInfo({ type: 'success', message: 'Expense added!' });
+    } catch (err) {
+      console.error("Failed to add expense:", err);
+      setExpenseError("Failed to add expense. Please try again.");
+    } finally {
+      setExpenseLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId) => {
+    setExpenseLoading(true);
+    setExpenseError(null);
+    try {
+      await apiDeleteExpense(expenseId);
+      setExpenses((prev) => prev.filter((exp) => exp.id !== expenseId));
+      setAlertInfo({ type: 'info', message: 'Expense deleted.' });
+    } catch (err) {
+      console.error("Failed to delete expense:", err);
+      setExpenseError("Failed to delete expense. Please try again.");
+    } finally {
+      setExpenseLoading(false);
+    }
+  };
+
+  const containerBgColor = currentThemeMode === 'dark' ? muiTheme.palette.grey[900] : muiTheme.palette.background.default;
+  const paperBgColor = currentThemeMode === 'dark' ? muiTheme.palette.grey[800] : muiTheme.palette.background.paper;
+  const textColor = currentThemeMode === 'dark' ? muiTheme.palette.grey[100] : muiTheme.palette.text.primary;
+  const secondaryTextColor = currentThemeMode === 'dark' ? muiTheme.palette.grey[400] : muiTheme.palette.text.secondary;
+  const inputBgColor = currentThemeMode === 'dark' ? muiTheme.palette.grey[700] : muiTheme.palette.background.paper;
+  const inputBorderColor = currentThemeMode === 'dark' ? muiTheme.palette.grey[600] : muiTheme.palette.divider;
+
   return (
-    <Container maxWidth="xl" sx={{
-      py: 4,
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: 'calc(100vh - 64px)',
-    }}>
+    <Container maxWidth="lg" sx={{ py: 4, color: textColor, minHeight: '100vh', bgcolor: containerBgColor }}>
       {alertInfo && (
-        <Alert severity={alertInfo.type} sx={{ mb: 2, mx: 'auto', width: 'fit-content' }}>
+        <Alert severity={alertInfo.type} onClose={() => setAlertInfo(null)} sx={{ mb: 3 }}>
           {alertInfo.message}
         </Alert>
       )}
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', lg: 'row' },
-          gap: 3,
-          flexGrow: 1,
-          position: 'relative',
-        }}
-      >
-        <Box sx={{ flex: 1 }}>
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: 3 }}>
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection:"column",
-              mb: 3,
-              position: 'relative' 
-            }}>
-              <Typography variant="h4" component="h1" color="primary" sx={{ textAlign: 'center' }}>
-                Plan Your Trip
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" component="h1" fontWeight="bold">
+          Plan Your Trip
+        </Typography>
+      </Box>
+
+      {!user ? (
+        <Alert severity="info">Please log in to plan your trip.</Alert>
+      ) : (
+        <Stack spacing={3}>
+          <Paper elevation={3} sx={{ p: 3, borderRadius: 2, bgcolor: paperBgColor }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h5" fontWeight="bold" sx={{ color: textColor }}>
+                {currentTrip ? `Current Trip: ${currentTrip.name}` : 'Start a New Trip'}
               </Typography>
-              <IconButton
-                color="primary"
-                sx={{
-                  display: { xs: 'none', lg: 'block' }, 
-                  position: 'absolute',
-                  right: 0,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  backgroundColor: 'primary.main',
-                  color: 'primary.contrastText',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
-                  }
-                }}
-                onClick={toggleSidePanel}
-                aria-label="Toggle Expense Tracker"
-              >
-                {sidePanelOpen ? <ChevronUp size={20} /> : <DollarSign size={20} />}
+              <IconButton onClick={() => setShowTripForm(!showTripForm)} sx={{ color: textColor }}>
+                {showTripForm ? <ChevronUp /> : <ChevronDown />}
               </IconButton>
             </Box>
 
-            {!showTripForm && (
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={2}
-                sx={{ maxWidth: '28rem', mx: 'auto' }}
-              >
+            {showTripForm && (
+              <Stack spacing={2} sx={{ mt: 2 }}>
                 <TextField
                   fullWidth
-                  label="Enter trip name here"
+                  label="Trip Name"
                   variant="outlined"
                   value={tripName}
                   onChange={(e) => setTripName(e.target.value)}
-                  disabled={formLoading}
+                  sx={{
+                    '& .MuiInputBase-input': { color: textColor },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '& .MuiInputLabel-root': { color: secondaryTextColor },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                    bgcolor: inputBgColor,
+                    borderRadius: 1
+                  }}
+                  InputProps={{ style: { borderRadius: '8px' } }}
+                />
+                <TextField
+                  fullWidth
+                  label="Departure"
+                  name="departure"
+                  variant="outlined"
+                  value={tripForm.departure}
+                  onChange={handleTripFormChange}
+                  sx={{
+                    '& .MuiInputBase-input': { color: textColor },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '& .MuiInputLabel-root': { color: secondaryTextColor },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                    bgcolor: inputBgColor,
+                    borderRadius: 1
+                  }}
+                  InputProps={{ style: { borderRadius: '8px' } }}
+                />
+                {/* Intermediate Stops Input and List */}
+                <Box>
+                  <Typography variant="h6" sx={{ color: textColor, mb: 1 }}>Intermediate Stops</Typography>
+                  <Stack direction="row" spacing={1} mb={1}>
+                    <TextField
+                      fullWidth
+                      label="Add Stop"
+                      variant="outlined"
+                      value={newIntermediateStop}
+                      onChange={(e) => setNewIntermediateStop(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddIntermediateStop();
+                        }
+                      }}
+                      sx={{
+                        '& .MuiInputBase-input': { color: textColor },
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                        '& .MuiInputLabel-root': { color: secondaryTextColor },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                        bgcolor: inputBgColor,
+                        borderRadius: 1
+                      }}
+                      InputProps={{ style: { borderRadius: '8px' } }}
+                    />
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleAddIntermediateStop}
+                      startIcon={<Plus />}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      Add
+                    </Button>
+                  </Stack>
+                  {tripForm.intermediateStops.length > 0 && (
+                    <List dense sx={{ maxHeight: 150, overflow: 'auto', border: `1px solid ${inputBorderColor}`, borderRadius: 1, bgcolor: inputBgColor }}>
+                      {tripForm.intermediateStops.map((stop, index) => (
+                        <ListItem
+                          key={index}
+                          secondaryAction={
+                            <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveIntermediateStop(index)} sx={{ color: muiTheme.palette.error.main }}>
+                              <X size={16} />
+                            </IconButton>
+                          }
+                          sx={{ color: textColor }}
+                        >
+                          <ListItemText primary={stop} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </Box>
+                <TextField
+                  fullWidth
+                  label="Destination"
+                  name="destination"
+                  variant="outlined"
+                  value={tripForm.destination}
+                  onChange={handleTripFormChange}
+                  sx={{
+                    '& .MuiInputBase-input': { color: textColor },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '& .MuiInputLabel-root': { color: secondaryTextColor },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                    bgcolor: inputBgColor,
+                    borderRadius: 1
+                  }}
+                  InputProps={{ style: { borderRadius: '8px' } }}
+                />
+                <FormControl fullWidth variant="outlined" sx={{
+                  '& .MuiInputBase-input': { color: textColor },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                  '& .MuiInputLabel-root': { color: secondaryTextColor },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                  bgcolor: inputBgColor,
+                  borderRadius: 1
+                }}>
+                  <InputLabel>Transport</InputLabel>
+                  <Select
+                    name="transport"
+                    value={tripForm.transport}
+                    onChange={handleTripFormChange}
+                    label="Transport"
+                    sx={{ borderRadius: '8px' }}
+                  >
+                    <MenuItem value="bus">Bus</MenuItem>
+                    <MenuItem value="train">Train</MenuItem>
+                    <MenuItem value="plane">Plane</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  fullWidth
+                  label="Date"
+                  name="date"
+                  type="date"
+                  variant="outlined"
+                  value={tripForm.date}
+                  onChange={handleTripFormChange}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    '& .MuiInputBase-input': { color: textColor },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '& .MuiInputLabel-root': { color: secondaryTextColor },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                    bgcolor: inputBgColor,
+                    borderRadius: 1
+                  }}
+                  InputProps={{ style: { borderRadius: '8px' } }}
+                />
+                <TextField
+                  fullWidth
+                  label="Budget (₹)"
+                  name="budget"
+                  type="number"
+                  variant="outlined"
+                  value={tripForm.budget}
+                  onChange={handleTripFormChange}
+                  sx={{
+                    '& .MuiInputBase-input': { color: textColor },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '& .MuiInputLabel-root': { color: secondaryTextColor },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                    bgcolor: inputBgColor,
+                    borderRadius: 1
+                  }}
+                  InputProps={{ style: { borderRadius: '8px' } }}
+                />
+                <TextField
+                  fullWidth
+                  label="Notes"
+                  name="notes"
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  value={tripForm.notes}
+                  onChange={handleTripFormChange}
+                  sx={{
+                    '& .MuiInputBase-input': { color: textColor },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '& .MuiInputLabel-root': { color: secondaryTextColor },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                    bgcolor: inputBgColor,
+                    borderRadius: 1
+                  }}
+                  InputProps={{ style: { borderRadius: '8px' } }}
                 />
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={handleAddNewTrip}
-                  startIcon={formLoading ? <CircularProgress size={20} color="inherit" /> : <Plus size={20} />}
-                  disabled={formLoading || !tripName.trim()}
-                  sx={{ py: 1.5 }}
+                  onClick={handleCreateNewTrip}
+                  disabled={tripLoading || !tripForm.destination || !tripForm.date}
+                  startIcon={tripLoading ? <CircularProgress size={20} color="inherit" /> : <Plus />}
+                  sx={{ borderRadius: 2 }}
                 >
-                  Add New Trip
+                  Create Trip
                 </Button>
-              </Stack>
-            )}
-            {showTripForm && (
-              <Stack spacing={3}>
-                <Typography variant="h5" component="h2" color="text.primary" textAlign="center">
-                  Trip: {tripName}
-                </Typography>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-                    gap: 2
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    label="Departure From"
-                    variant="outlined"
-                    value={tripForm.departure}
-                    onChange={(e) => setTripForm(prev => ({ ...prev, departure: e.target.value }))}
-                    disabled={formLoading}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Destination"
-                    variant="outlined"
-                    value={tripForm.destination}
-                    onChange={(e) => setTripForm(prev => ({ ...prev, destination: e.target.value }))}
-                    disabled={formLoading}
-                  />
-                </Box>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-                    gap: 2
-                  }}
-                >
-                  <FormControl fullWidth variant="outlined" disabled={formLoading}>
-                    <InputLabel id="transport-label">Mode of Transport</InputLabel>
-                    <Select
-                      labelId="transport-label"
-                      label="Mode of Transport"
-                      value={tripForm.transport}
-                      onChange={(e) => setTripForm(prev => ({ ...prev, transport: e.target.value }))}
-                    >
-                      <MenuItem value="bus">Bus</MenuItem>
-                      <MenuItem value="train">Train</MenuItem>
-                      <MenuItem value="plane">Aeroplane</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    fullWidth
-                    label="Travel Date"
-                    type="date"
-                    variant="outlined"
-                    value={tripForm.date}
-                    onChange={(e) => setTripForm(prev => ({ ...prev, date: e.target.value }))}
-                    InputLabelProps={{ shrink: true }}
-                    disabled={formLoading}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Passengers"
-                    type="number"
-                    variant="outlined"
-                    inputProps={{ min: 1 }}
-                    value={tripForm.passengers}
-                    onChange={(e) => setTripForm(prev => ({ ...prev, passengers: parseInt(e.target.value) }))}
-                    disabled={formLoading}
-                  />
-                </Box>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={handleSearch}
-                    startIcon={formLoading ? <CircularProgress size={20} color="inherit" /> : <Search size={20} />}
-                    disabled={formLoading || !tripForm.departure || !tripForm.destination}
-                    sx={{ px: 3, py: 1.5 }}
-                  >
-                    Search
-                  </Button>
-                </Box>
+                {tripError && <Alert severity="error">{tripError}</Alert>}
               </Stack>
             )}
           </Paper>
-          {searchResults.length > 0 && (
-            <Stack spacing={2}>
-              <Typography variant="h5" component="h3" color="text.primary">
-                Search Results
-              </Typography>
-              {searchResults.map((result) => (
-                <Paper key={result.id} sx={{ p: 2, borderRadius: 2, boxShadow: 1 }}>
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    justifyContent="space-between"
-                    spacing={{ xs: 1, sm: 2 }}
-                  >
-                    <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
-                      <Box sx={{ color: 'text.secondary' }}>
-                        {getTransportIcon(result.transport)}
-                      </Box>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600 }}>
-                          <MapPin size={16} /> {result.departure} → {result.destination}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {result.company} • {result.duration} • Rating: {result.rating}/5
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="h6" color="success.main" fontWeight="bold">
-                          ₹{result.price}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          per person
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-                      <Button
-                        variant="contained"
-                        sx={{
-                          backgroundColor: '#3b82f6',
-                          '&:hover': { backgroundColor: '#2563eb' },
-                          flex: 1
-                        }}
-                        onClick={() => handleBookNow(result)}
-                        disabled={formLoading}
-                      >
-                        Book Now
-                      </Button>
-                      <Button
-                        variant="contained"
-                        sx={{
-                          backgroundColor: '#8b5cf6',
-                          '&:hover': { backgroundColor: '#7c3aed' },
-                          flex: 1
-                        }}
-                        onClick={() => addToExpenseTracker(result)}
-                        disabled={formLoading}
-                      >
-                        Add to Tracker
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          )}
-        </Box>
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            zIndex: 1500,
-            display: { xs: 'block', lg: 'none' } 
-          }}
-        >
-          <IconButton
-            color="primary"
-            sx={{
-              backgroundColor: 'primary.main',
-              color: 'primary.contrastText',
-              p: 2,
-              boxShadow: 3,
-              '&:hover': {
-                backgroundColor: 'primary.dark',
-              }
-            }}
-            onClick={toggleSidePanel}
-            aria-label="Toggle Expense Tracker"
-          >
-            <DollarSign size={24} />
-          </IconButton>
-        </Box>
-        <Box
-          sx={{
-            position: { xs: 'fixed', lg: 'relative' },
-            top: 0,
-            right: 0,
-            height: { xs: '100%', lg: 'auto' },
-            width: { xs: '100%', sm: '20rem', lg: '25rem' },
-            backgroundColor: 'background.paper',
-            boxShadow: 8,
-            zIndex: { xs: 2000, lg: 1 },
-            transition: 'transform 0.3s ease-in-out',
-            transform: sidePanelOpen ? 'translateX(0)' : { xs: 'translateX(100%)', lg: 'translateX(0)' },
-            display: { xs: 'block', lg: (sidePanelOpen ? 'block' : 'none') },
-            overflowY: 'auto',
-          }}
-        >
-          <Box sx={{ p: 3, height: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-              <Typography variant="h5" component="h3" color="text.primary" fontWeight="bold">
-                Expense Tracker
-              </Typography>
-              <IconButton
-                onClick={() => setSidePanelOpen(false)}
-                sx={{ display: { lg: 'none' }, color: 'text.primary' }}
-              >
-                &times;
-              </IconButton>
-            </Box>
-            <Stack spacing={2}>
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={() => toggleTab('expense-form')}
-                endIcon={tabStates['expense-form'] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                sx={{ justifyContent: 'space-between' }}
-              >
-                Add Expense
-              </Button>
-              {tabStates['expense-form'] && (
-                <Paper sx={{ p: 2, borderRadius: 1, bgcolor: 'background.default', boxShadow: 1 }}>
-                  <Stack spacing={2}>
-                    <TextField
-                      fullWidth
-                      label="Expense title"
-                      variant="outlined"
-                      value={newExpense.title}
-                      onChange={(e) => setNewExpense(prev => ({ ...prev, title: e.target.value }))}
-                      disabled={formLoading}
-                    />
-                    <TextField
-                      fullWidth
-                      label="Amount"
-                      type="number"
-                      variant="outlined"
-                      value={newExpense.amount}
-                      onChange={(e) => setNewExpense(prev => ({ ...prev, amount: e.target.value }))}
-                      disabled={formLoading}
-                    />
-                    <FormControl fullWidth variant="outlined" disabled={formLoading}>
-                      <InputLabel id="expense-category-label">Category</InputLabel>
-                      <Select
-                        labelId="expense-category-label"
-                        label="Category"
-                        value={newExpense.category}
-                        onChange={(e) => setNewExpense(prev => ({ ...prev, category: e.target.value }))}
-                      >
-                        <MenuItem value="transport">Transport</MenuItem>
-                        <MenuItem value="accommodation">Accommodation</MenuItem>
-                        <MenuItem value="food">Food</MenuItem>
-                        <MenuItem value="entertainment">Entertainment</MenuItem>
-                        <MenuItem value="other">Other</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <TextField
-                      fullWidth
-                      label="Date"
-                      type="date"
-                      variant="outlined"
-                      value={newExpense.date}
-                      onChange={(e) => setNewExpense(prev => ({ ...prev, date: e.target.value }))}
-                      InputLabelProps={{ shrink: true }}
-                      disabled={formLoading}
-                    />
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      color="success"
-                      onClick={addExpense}
-                      disabled={formLoading || !newExpense.title || !newExpense.amount}
-                      startIcon={formLoading ? <CircularProgress size={20} color="inherit" /> : null}
-                    >
-                      Add Expense
-                    </Button>
-                  </Stack>
-                </Paper>
-              )}
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={() => toggleTab('expense-list')}
-                endIcon={tabStates['expense-list'] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                sx={{ justifyContent: 'space-between' }}
-              >
-                Expense List ({expenses.length})
-              </Button>
-              {tabStates['expense-list'] && (
-                <Paper sx={{
-                  p: 2,
-                  borderRadius: 1,
-                  bgcolor: 'background.default',
-                  boxShadow: 1,
-                  maxHeight: '24rem',
-                  overflowY: 'auto'
-                }}>
-                  {expenses.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary" textAlign="center">
-                      No expenses added yet
-                    </Typography>
-                  ) : (
-                    <Stack spacing={1.5}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="text.primary" sx={{ borderBottom: 1, borderColor: 'primary.main', pb: 0.5, mb: 1 }}>
-                        Total: ₹{totalExpenses.toFixed(2)}
-                      </Typography>
-                      {expenses.map((expense) => (
-                        <Paper key={expense.id} sx={{ p: 1.5, borderRadius: 1, border: 1, borderColor: 'primary.light' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="body1" fontWeight={500} color="text.primary">
-                                {expense.title}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary" textTransform="capitalize">
-                                {expense.category}
-                              </Typography>
-                              {expense.date && (
-                                <Typography variant="caption" color="text.disabled">
-                                  {expense.date}
-                                </Typography>
-                              )}
-                            </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="body1" fontWeight={600} color="success.main">
-                                ₹{expense.amount.toFixed(2)}
-                              </Typography>
-                              <IconButton
-                                onClick={() => deleteExpense(expense.id)}
-                                color="error"
-                                size="small"
-                                sx={{ '&:hover': { color: 'error.dark' } }}
-                              >
-                                <Trash2 size={16} />
-                              </IconButton>
-                            </Box>
-                          </Box>
-                        </Paper>
+
+          {currentTrip && (
+            <>
+              {/* Transport Search and Booking */}
+              <Paper elevation={3} sx={{ p: 3, borderRadius: 2, bgcolor: paperBgColor }}>
+                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2, color: textColor }}>
+                  Book Transport
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+                  <Box sx={{ p: 1, bgcolor: muiTheme.palette.primary.main, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {getTransportIcon(tripForm.transport)}
+                  </Box>
+                  <Typography variant="body1" sx={{ color: textColor }}>
+                    {tripForm.departure}
+                    {tripForm.intermediateStops.length > 0 && ( // Display intermediate stops in route
+                      <>
+                        <ChevronRight size={16} style={{ verticalAlign: 'middle' }} />
+                        {tripForm.intermediateStops.join(' > ')}
+                      </>
+                    )}
+                    <ChevronRight size={16} style={{ verticalAlign: 'middle' }} /> {tripForm.destination}
+                  </Typography>
+                </Stack>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleSearchTransport}
+                  disabled={searchLoading || !tripForm.departure || !tripForm.destination || !tripForm.date || !tripForm.transport}
+                  startIcon={searchLoading ? <CircularProgress size={20} color="inherit" /> : <Search />}
+                  sx={{ borderRadius: 2 }}
+                >
+                  Search Transport
+                </Button>
+                {searchError && <Alert severity="error" sx={{ mt: 2 }}>{searchError}</Alert>}
+
+                {searchLoading && <CircularProgress size={24} sx={{ mt: 2 }} />}
+                {searchResults.length > 0 && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" sx={{ mb: 1.5, color: textColor }}>Available Options:</Typography>
+                    <List>
+                      {searchResults.map((result) => (
+                        <ListItem
+                          key={result.id}
+                          secondaryAction={
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleBookTransport(result)}
+                              sx={{ borderRadius: 1.5 }}
+                            >
+                              Book
+                            </Button>
+                          }
+                          sx={{
+                            bgcolor: paperBgColor,
+                            mb: 1,
+                            borderRadius: 1,
+                            color: textColor
+                          }}
+                        >
+                          <ListItemText
+                            primary={<Typography variant="body1" fontWeight="bold" sx={{ color: textColor }}>{result.route}</Typography>}
+                            secondary={<Typography variant="body2" sx={{ color: secondaryTextColor }}>₹{result.price.toLocaleString('en-IN')}</Typography>}
+                          />
+                        </ListItem>
                       ))}
-                    </Stack>
-                  )}
-                </Paper>
-              )}
-            </Stack>
-          </Box>
-        </Box>
-      </Box>
-      {sidePanelOpen && (
-        <Box
-          onClick={() => setSidePanelOpen(false)}
-          sx={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: { xs: 1900, lg: -1 }
-          }}
-        />
-      )}
-      <Dialog
-        open={showBookingModal}
-        onClose={() => setShowBookingModal(false)}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: {
-            backgroundColor: 'background.paper',
-            color: 'text.primary',
-            boxShadow: 8,
-            borderRadius: 2
-          }
-        }}
-      >
-        <DialogTitle sx={{ textAlign: 'center', color: 'primary.main', pb: 0 }}>
-          Book Your Trip
-        </DialogTitle>
-        <DialogContent dividers sx={{ borderColor: 'divider' }}>
-          {selectedResult && (
-            <Box sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-              <Typography variant="body1" fontWeight="bold">
-                {selectedResult.departure} → {selectedResult.destination}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {selectedResult.company} • {selectedResult.transport.toUpperCase()}
-              </Typography>
-              <Typography variant="body1">
-                ₹{selectedResult.price} per person
-              </Typography>
-            </Box>
+                    </List>
+                  </Box>
+                )}
+              </Paper>
+
+              <Paper elevation={3} sx={{ p: 3, borderRadius: 2, bgcolor: paperBgColor }}>
+                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2, color: textColor }}>
+                  Expense Tracking
+                </Typography>
+                <Stack spacing={2} mb={3}>
+                  <TextField
+                    fullWidth
+                    label="Description"
+                    name="description"
+                    variant="outlined"
+                    value={expenseForm.description}
+                    onChange={handleExpenseFormChange}
+                    sx={{
+                      '& .MuiInputBase-input': { color: textColor },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                      '& .MuiInputLabel-root': { color: secondaryTextColor },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                      bgcolor: inputBgColor,
+                      borderRadius: 1
+                    }}
+                    InputProps={{ style: { borderRadius: '8px' } }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Amount (₹)"
+                    name="amount"
+                    type="number"
+                    variant="outlined"
+                    value={expenseForm.amount}
+                    onChange={handleExpenseFormChange}
+                    sx={{
+                      '& .MuiInputBase-input': { color: textColor },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                      '& .MuiInputLabel-root': { color: secondaryTextColor },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                      bgcolor: inputBgColor,
+                      borderRadius: 1
+                    }}
+                    InputProps={{ style: { borderRadius: '8px' } }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Date"
+                    name="date"
+                    type="date"
+                    variant="outlined"
+                    value={expenseForm.date}
+                    onChange={handleExpenseFormChange}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      '& .MuiInputBase-input': { color: textColor },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                      '& .MuiInputLabel-root': { color: secondaryTextColor },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                      bgcolor: inputBgColor,
+                      borderRadius: 1
+                    }}
+                    InputProps={{ style: { borderRadius: '8px' } }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Category"
+                    name="category"
+                    variant="outlined"
+                    value={expenseForm.category}
+                    onChange={handleExpenseFormChange}
+                    sx={{
+                      '& .MuiInputBase-input': { color: textColor },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                      '& .MuiInputLabel-root': { color: secondaryTextColor },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                      bgcolor: inputBgColor,
+                      borderRadius: 1
+                    }}
+                    InputProps={{ style: { borderRadius: '8px' } }}
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAddExpense}
+                    disabled={expenseLoading || !expenseForm.description || !expenseForm.amount}
+                    startIcon={expenseLoading ? <CircularProgress size={20} color="inherit" /> : <Plus />}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    Add Expense
+                  </Button>
+                  {expenseError && <Alert severity="error">{expenseError}</Alert>}
+                </Stack>
+
+                <Typography variant="h6" sx={{ mb: 1.5, color: textColor }}>Recent Expenses:</Typography>
+                {expenseLoading ? (
+                  <CircularProgress size={24} />
+                ) : expenses.length === 0 ? (
+                  <Typography variant="body2" sx={{ color: secondaryTextColor }}>No expenses recorded for this trip yet.</Typography>
+                ) : (
+                  <List>
+                    {expenses.map((expense) => (
+                      <ListItem
+                        key={expense.id}
+                        secondaryAction={
+                          <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteExpense(expense.id)} sx={{ color: muiTheme.palette.error.main }}>
+                            <Trash2 size={20} />
+                          </IconButton>
+                        }
+                        sx={{
+                          bgcolor: paperBgColor,
+                          mb: 1, borderRadius: 1, color: textColor
+                        }}
+                      >
+                        <ListItemText
+                          primary={<Typography variant="body1" fontWeight="bold" sx={{ color: textColor }}>{expense.description} - ₹{expense.amount.toLocaleString('en-IN')}</Typography>}
+                          secondary={<Typography variant="body2" sx={{ color: secondaryTextColor }}>{expense.category} on {expense.date}</Typography>}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </Paper>
+            </>
           )}
-          <Stack spacing={2}>
-            <TextField
-              fullWidth
-              label="Travel Date"
-              type="date"
-              variant="outlined"
-              value={bookingForm.date}
-              onChange={(e) => setBookingForm(prev => ({ ...prev, date: e.target.value }))}
-              InputLabelProps={{ shrink: true }}
-              disabled={bookingLoading}
-            />
-            <TextField
-              fullWidth
-              label="Number of Travelers"
-              type="number"
-              min="1"
-              variant="outlined"
-              value={bookingForm.travelers}
-              onChange={(e) => setBookingForm(prev => ({ ...prev, travelers: parseInt(e.target.value) || 1 }))}
-              disabled={bookingLoading}
-            />
-            <TextField
-              fullWidth
-              label="Special Requests (Optional)"
-              multiline
-              rows={3}
-              variant="outlined"
-              value={bookingForm.specialRequests}
-              onChange={(e) => setBookingForm(prev => ({ ...prev, specialRequests: e.target.value }))}
-              placeholder="Any special requirements..."
-              disabled={bookingLoading}
-            />
-          </Stack>
+        </Stack>
+      )}
+
+      <Dialog open={showBookingModal} onClose={() => setShowBookingModal(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ bgcolor: muiTheme.palette.primary.main, color: muiTheme.palette.primary.contrastText }}>Confirm Transport Booking</DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: paperBgColor, color: textColor }}>
+          {selectedResult && (
+            <Stack spacing={2}>
+              <Typography variant="h6" sx={{ color: textColor }}>
+                Booking: {selectedResult.route}
+              </Typography>
+              <Typography variant="body1" sx={{ color: secondaryTextColor }}>
+                Price per traveler: ₹{selectedResult.price.toLocaleString('en-IN')}
+              </Typography>
+              <TextField
+                fullWidth
+                label="Number of Travelers"
+                type="number"
+                variant="outlined"
+                value={bookingForm.travelers}
+                onChange={(e) => setBookingForm(prev => ({ ...prev, travelers: parseInt(e.target.value) || 1 }))}
+                disabled={bookingLoading}
+                sx={{
+                  '& .MuiInputBase-input': { color: textColor },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                  '& .MuiInputLabel-root': { color: secondaryTextColor },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                  bgcolor: inputBgColor,
+                  borderRadius: 1
+                }}
+                InputProps={{ style: { borderRadius: '8px' } }}
+              />
+              <TextField
+                fullWidth
+                label="Special Requests (Optional)"
+                multiline
+                rows={3}
+                variant="outlined"
+                value={bookingForm.specialRequests}
+                onChange={(e) => setBookingForm(prev => ({ ...prev, specialRequests: e.target.value }))}
+                placeholder="Any special requirements..."
+                disabled={bookingLoading}
+                sx={{
+                  '& .MuiInputBase-input': { color: textColor },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                  '& .MuiInputLabel-root': { color: secondaryTextColor },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: inputBorderColor },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: muiTheme.palette.primary.main },
+                  bgcolor: inputBgColor,
+                  borderRadius: 1
+                }}
+                InputProps={{ style: { borderRadius: '8px' } }}
+              />
+            </Stack>
+          )}
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions sx={{ p: 2, bgcolor: paperBgColor }}>
           <Button
             onClick={() => setShowBookingModal(false)}
             variant="outlined"
             color="secondary"
             disabled={bookingLoading}
-            sx={{ flex: 1 }}
+            sx={{ flex: 1, borderRadius: 2 }}
           >
             Cancel
           </Button>
@@ -795,7 +800,7 @@ const PlanTripContent = () => {
             color="success"
             disabled={bookingLoading}
             startIcon={bookingLoading ? <CircularProgress size={20} color="inherit" /> : null}
-            sx={{ flex: 1 }}
+            sx={{ flex: 1, borderRadius: 2 }}
           >
             Confirm Booking (₹{selectedResult ? (selectedResult.price * bookingForm.travelers).toFixed(2) : 0})
           </Button>
@@ -804,7 +809,9 @@ const PlanTripContent = () => {
     </Container>
   );
 };
+
 const PlanTrip = () => {
   return <PlanTripContent />;
 };
+
 export default PlanTrip;

@@ -212,7 +212,7 @@ function AppContent() {
                 <Button color="inherit" component={NavLink} to="/login" sx={{ mx: 1 }}>
                   Login
                 </Button>
-                <Button variant="contained" color="primary" component={NavLink} to="/signup" sx={{ mx: 1 }}>
+                <Button  color="inherit" component={NavLink} to="/signup" sx={{ mx: 1 }}>
                   Sign Up
                 </Button>
               </>
@@ -311,6 +311,7 @@ function AppContent() {
                 <Route path="/packages/:id" element={<PackageDetail />} />
                 <Route path="/booking/:id" element={<Booking />} />
                 <Route path="/plan" element={<PlanTrip />} />
+                <Route path="/plan/:tripId" element={<PlanTrip />} />
                 <Route path="/expenses" element={<><ExpenseList /></>} />
                 <Route path="/expenses/new" element={<><ExpenseForm /></>} />
                 <Route path="/expenses/edit/:id" element={<><ExpenseForm /></>} />

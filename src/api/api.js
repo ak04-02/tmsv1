@@ -109,6 +109,25 @@ export const fetchUserTrips = async (userId) => {
   if (!res.ok) throw new Error("Failed to fetch trips");
   return res.json();
 };
+export const updateBooking = async (bookingId, updatedData) => {
+  try {
+    const response = await fetch(`http://localhost:5000/bookings/${bookingId}`, {
+      method: 'PUT', 
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedData),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Error updating booking ${bookingId}:`, error);
+    throw error;
+  }
+};
 export const updateTrip = async (id, trip) => {
   const res = await fetch(`${API_BASE}/trips/${id}`, {
     method: "PUT",

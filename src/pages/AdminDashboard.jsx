@@ -14,6 +14,13 @@ import {
   fetchPackages,
   updateTrip,
 } from '../api/api';
+import {
+  ResponsiveContainer,
+  BarChart, Bar,
+  XAxis, YAxis,
+  CartesianGrid, Tooltip, Legend
+} from 'recharts';
+
 const API_BASE = "http://localhost:5000"; 
 const AdminDashboard = () => {
   const { user, loading, logout } = useAuth();
@@ -38,6 +45,7 @@ const AdminDashboard = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [openEditTripDialog, setOpenEditTripDialog] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
+  
   const fetchAllUsersForAdminDashboard = async () => {
     try {
       const res = await fetch(`${API_BASE}/users`);
@@ -141,6 +149,33 @@ const AdminDashboard = () => {
       throw err;
     }
   };
+  const deleteTripForAdminDashboard = async (tripId) => {
+  try {
+    const res = await fetch(`${API_BASE}/trips/${tripId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Failed to delete trip.");
+    }
+    return true;
+  } catch (err) {
+    console.error('Error deleting trip:', err);
+    throw err;
+  }
+};
+const handleDeleteTrip = async (tripId) => {
+  if (window.confirm("Are you sure you want to delete this trip? This action cannot be undone.")) {
+    try {
+      await deleteTripForAdminDashboard(tripId);
+      fetchAdminData(); 
+      setError(null);
+    } catch (err) {
+      setError('Failed to delete trip. Please try again. Error: ' + err.message);
+    }
+  }
+};
+
   const fetchAllTripsForAdminDashboard = async () => {
     try {
       const res = await fetch(`${API_BASE}/trips`);
@@ -351,7 +386,7 @@ const AdminDashboard = () => {
         boxShadow: muiTheme.shadows[1]
       }}>
         <Typography variant="h4" component="h1" gutterBottom sx={{ color: muiTheme.palette.text.primary, mb: 0 }}>
-          Admin Dashboard
+          Admin Panel
         </Typography>
         {/* <Button variant="contained" color="secondary" onClick={logout}>
           Logout
@@ -382,6 +417,25 @@ const AdminDashboard = () => {
           <Typography variant="h5" component="h2" gutterBottom sx={{ color: muiTheme.palette.primary.main }}>
             All Users
           </Typography>
+          <Box sx={{ my: 2 }}>
+  <Typography variant="subtitle1">Trips per User</Typography>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={
+      users.map(user => ({
+        name: user.username,
+        trips: trips.filter(t => t.userId === user.id).length
+      }))
+    }>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="trips" fill="#3B82F6" />
+    </BarChart>
+  </ResponsiveContainer>
+</Box>
+
           <TableContainer>
             <Table>
               <TableHead>
@@ -425,6 +479,34 @@ const AdminDashboard = () => {
           <Typography variant="h5" component="h2" gutterBottom sx={{ color: muiTheme.palette.primary.main }}>
             All Bookings
           </Typography>
+          <Box sx={{ my: 2 }}>
+  <Typography variant="subtitle1">Bookings by User and Status</Typography>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={
+      users.map(user => {
+        const userBookings = bookings.filter(b => b.userId === user.id);
+        return {
+          name: user.username,
+          confirmed: userBookings.filter(b => b.status === 'confirmed').length,
+          pending: userBookings.filter(b => b.status === 'pending').length,
+          cancelled: userBookings.filter(b => b.status === 'cancelled').length,
+          completed: userBookings.filter(b => b.status === 'completed').length,
+        };
+      })
+    }>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="confirmed" fill="#22C55E" />
+      <Bar dataKey="pending" fill="#FACC15" />
+      <Bar dataKey="cancelled" fill="#EF4444" />
+      <Bar dataKey="completed" fill="#3B82F6" />
+    </BarChart>
+  </ResponsiveContainer>
+</Box>
+
           <TableContainer>
             <Table>
               <TableHead>
@@ -496,6 +578,26 @@ const AdminDashboard = () => {
             <Typography variant="h5" component="h2" gutterBottom sx={{ color: muiTheme.palette.primary.main, mb: 0 }}>
               Manage Packages
             </Typography>
+            <Box sx={{ my: 2 }}>
+  <Typography variant="subtitle1">Sales per Package</Typography>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={
+      packages.map(pkg => ({
+        name: pkg.title,
+        sales: bookings.filter(b => b.packageId === pkg.id).length
+      }))
+    }>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="sales" fill="#6366F1" />
+    </BarChart>
+  </ResponsiveContainer>
+</Box>
+
+
             <Button variant="contained" onClick={() => setOpenAddPackageDialog(true)}>
               Add New Package
             </Button>
@@ -574,9 +676,21 @@ const AdminDashboard = () => {
                       <TableCell>{t.status}</TableCell>
                       <TableCell>${t.price}</TableCell>
                       <TableCell>
-                        <IconButton aria-label="edit trip" size="small" onClick={() => handleEditTripClick(t)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
+                       <IconButton
+    aria-label="edit trip"
+    size="small"
+    onClick={() => handleEditTripClick(t)}
+  >
+    <EditIcon fontSize="small" />
+  </IconButton>
+  <IconButton
+    aria-label="delete trip"
+    size="small"
+    color="error"
+    onClick={() => handleDeleteTrip(t.id)}
+  >
+    <DeleteIcon fontSize="small" />
+  </IconButton>
                       </TableCell>
                     </TableRow>
                   ))
@@ -595,6 +709,27 @@ const AdminDashboard = () => {
           <Typography variant="h5" component="h2" gutterBottom sx={{ color: muiTheme.palette.primary.main }}>
             All Expenses
           </Typography>
+          <Box sx={{ my: 2 }}>
+  <Typography variant="subtitle1">Expenses per User</Typography>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={
+      users.map(user => ({
+        name: user.username,
+        expenses: expenses
+          .filter(e => e.userId === user.id)
+          .reduce((sum, e) => sum + e.amount, 0)
+      }))
+    }>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="expenses" fill="#14B8A6" />
+    </BarChart>
+  </ResponsiveContainer>
+</Box>
+
           <TableContainer>
             <Table>
               <TableHead>
